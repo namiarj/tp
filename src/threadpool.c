@@ -22,9 +22,9 @@ struct tpool {
 };
 
 void
-*run_tasks(void *param)
+*run_tasks(void *arg)
 {
-	tpool_t pool = param;
+	tpool_t pool = arg;
 	struct task_data picked_task;
 loop:
 	pthread_mutex_lock(&pool->mutex);
