@@ -10,14 +10,14 @@ struct task_data {
 };
 
 struct tpool {
-	pthread_t		*workers;
 	struct task_data*	task_queue;
 	int			queue_head, queue_tail;
-	int			max_workers;
-	int			active_workers;
+	int			max_threads;
+	int			active_threads;
 	int			scheduled;
 	pthread_mutex_t		mutex;
-	pthread_cond_t 		work_available;
+	pthread_t		*threads;
+	pthread_cond_t 		task_available;
 	pthread_cond_t 		done;
 };
 
@@ -29,11 +29,11 @@ void
 loop:
 	pthread_mutex_lock(&pool->mutex);
 	if (!pool->scheduled) {
-	pool->active_workers--;
-	if (!pool->active_workers)
+	pool->active_threads--;
+	if (!pool->active_threads)
 		pthread_cond_signal(&pool->done);
-	pthread_cond_wait(&pool->work_available, &pool->mutex);
-	pool->active_workers++;
+	pthread_cond_wait(&pool->task_available, &pool->mutex);
+	pool->active_threads++;
 	}
 	picked_task = pool->task_queue[pool->queue_head++];
 	pool->scheduled--;
@@ -46,13 +46,13 @@ tpool_t
 tpool_create(unsigned int num_threads)
 {
 	tpool_t pool = malloc(sizeof(tpool_t));
-	pool->queue_head = pool->queue_tail = pool->scheduled = 0;
-	pool->active_workers = pool->max_workers = num_threads;
-	pool->workers = malloc(sizeof(pthread_t) * num_threads);
 	pool->task_queue = malloc(sizeof(struct task_data));
+	pool->queue_head = pool->queue_tail = pool->scheduled = 0;
+	pool->active_threads = pool->max_threads = num_threads;
+	pool->threads = malloc(sizeof(pthread_t) * num_threads);
 	pthread_mutex_lock(&pool->mutex);
 	for (int i = 0; i < num_threads; i++)
-		pthread_create(&pool->workers[i], NULL, &run_tasks, pool);
+		pthread_create(&pool->threads[i], NULL, &run_tasks, pool);
 	return pool;
 }
 
@@ -66,7 +66,7 @@ tpool_schedule_task(tpool_t pool, void (*fun)(tpool_t, void*), void *arg)
 	pool->task_queue[pool->queue_tail++] = task;
 	pool->scheduled++;
 	pool->task_queue = realloc(pool->task_queue, sizeof(struct task_data) * (pool->queue_tail + 1));
-	pthread_cond_signal(&pool->work_available);
+	pthread_cond_signal(&pool->task_available);
 	pthread_mutex_unlock(&pool->mutex);
 }
 
@@ -74,9 +74,9 @@ void
 tpool_join(tpool_t pool)
 {
 	pthread_mutex_lock(&pool->mutex);
-	while(pool->active_workers || pool->scheduled)
+	while(pool->active_threads || pool->scheduled)
 		pthread_cond_wait(&pool->done, &pool->mutex);
 	free(pool->task_queue); 
-	for (int i = 0; i < pool->max_workers; i++)
-		pthread_cancel(pool->workers[i]);
+	for (int i = 0; i < pool->max_threads; i++)
+		pthread_cancel(pool->threads[i]);
 }
