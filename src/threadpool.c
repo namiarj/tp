@@ -74,7 +74,7 @@ void
 tpool_join(tpool_t pool)
 {
     pthread_mutex_lock(&pool->mutex);
-    while(pool->active_workers || pool->scheduled){
+    while(pool->active_workers || pool->scheduled) {
         pthread_cond_wait(&pool->done, &pool->mutex);
     }
     free(pool->task_queue); 
