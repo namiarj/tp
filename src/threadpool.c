@@ -11,7 +11,7 @@ struct task_data {
 
 struct tpool {
 	pthread_t		*workers;
-	struct task_data*	task_queue;
+	struct task_data	*task_queue;
 	int			queue_head, queue_tail;
 	int			max_workers;
 	int			active_workers;
