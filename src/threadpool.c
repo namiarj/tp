@@ -10,12 +10,12 @@ struct task_data {
 };
 
 struct tpool {
-	pthread_t		*workers;
 	struct task_data	*task_queue;
 	int			queue_head, queue_tail;
-	int			max_workers;
-	int			active_workers;
 	int			scheduled;
+	int			active_workers;
+	int			max_workers;
+	pthread_t		*workers;
 	pthread_mutex_t		mutex;
 	pthread_cond_t 		work_available;
 	pthread_cond_t 		done;
@@ -46,10 +46,10 @@ tpool_t
 tpool_create(unsigned int num_threads)
 {
 	tpool_t pool = malloc(sizeof(tpool_t));
+	pool->task_queue = malloc(sizeof(struct task_data));
 	pool->queue_head = pool->queue_tail = pool->scheduled = 0;
 	pool->active_workers = pool->max_workers = num_threads;
 	pool->workers = malloc(sizeof(pthread_t) * num_threads);
-	pool->task_queue = malloc(sizeof(struct task_data));
 	pthread_mutex_lock(&pool->mutex);
 	for (int i = 0; i < num_threads; i++)
 		pthread_create(&pool->workers[i], NULL, &run_tasks, pool);
