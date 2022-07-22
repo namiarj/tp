@@ -12,7 +12,7 @@ struct task_data {
 struct tpool {
 	struct task_data*	task_queue;
 	int			queue_head, queue_tail;
-	int			threads_num;
+	int			num_threads;
 	int			active_threads;
 	int			scheduled;
 	int			keepalive;
@@ -56,7 +56,7 @@ tpool_create(unsigned int num_threads)
 	tpool_t pool = malloc(sizeof(struct tpool));
 	pool->task_queue = malloc(sizeof(struct task_data));
 	pool->queue_head = pool->queue_tail = pool->scheduled = 0;
-	pool->active_threads = pool->threads_num = num_threads;
+	pool->active_threads = pool->num_threads = num_threads;
 	pool->threads = malloc(sizeof(pthread_t) * num_threads);
 	pool->keepalive = 1;
 	pthread_mutex_init(&pool->mutex, NULL);
@@ -75,8 +75,8 @@ tpool_schedule_task(tpool_t pool, void (*fun)(tpool_t, void*), void *arg)
 	pool->task_queue[pool->queue_tail++] = task;
 	pool->scheduled++;
 	pool->task_queue = realloc(pool->task_queue, sizeof(struct task_data) * (pool->queue_tail + 1));
-	pthread_cond_signal(&pool->notify);
 	pthread_mutex_unlock(&pool->mutex);
+	pthread_cond_signal(&pool->notify);
 }
 
 void
@@ -88,7 +88,7 @@ tpool_join(tpool_t pool)
 	pool->keepalive = 0;
 	pthread_cond_broadcast(&pool->notify);
 	pthread_mutex_unlock(&pool->mutex);
-	for (int i = 0; i < pool->threads_num; i++)
+	for (int i = 0; i < pool->num_threads; i++)
 		pthread_join(pool->threads[i], NULL);
 	free(pool->threads); 
 	free(pool->task_queue); 
