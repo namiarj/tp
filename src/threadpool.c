@@ -32,10 +32,8 @@ loop:
 	pthread_mutex_lock(&pool->mutex);
 	while (!pool->scheduled && pool->keepalive) {
 		pool->active_threads--;
-		if (!pool->active_threads) {
+		if (!pool->active_threads)
 			pthread_cond_signal(&pool->done);
-			goto shutdown;
-		}
 		pthread_cond_wait(&pool->notify, &pool->mutex);
 		pool->active_threads++;
 	}
