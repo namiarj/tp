@@ -34,10 +34,10 @@ loop:
 		if (!pool->active_threads)
 			pthread_cond_signal(&pool->done);
 		pthread_cond_wait(&pool->notify, &pool->mutex);
-		pool->active_threads++;
 	}
 	if (!pool->keepalive)
 		goto shutdown;
+	pool->active_threads++;
 	picked_task = pool->task_queue[pool->queue_head++];
 	pool->scheduled--;
 	pthread_mutex_unlock(&pool->mutex);
