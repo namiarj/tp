@@ -24,7 +24,7 @@ struct tpool {
 	pthread_cond_t 	notify, done;
 };
 
-void
+static void
 *run_tasks(void *arg)
 {
 	tpool_t pool = arg;
@@ -68,7 +68,7 @@ tpool_create(unsigned int num_threads)
 	return (pool);
 }
 
-void
+static void
 resize_queue(tpool_t pool)
 {
 	struct task_s *resized_queue = malloc(TASK_S_SIZE * pool->queue_size);
