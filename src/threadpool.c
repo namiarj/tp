@@ -49,7 +49,6 @@ shutdown:
 	pthread_mutex_unlock(&pool->mutex);
 	pthread_exit(NULL);
 	return (NULL);
-
 }
 
 tpool_t
