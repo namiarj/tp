@@ -83,7 +83,6 @@ void
 tpool_schedule_task(tpool_t pool, void (*fun)(tpool_t, void*), void *arg)
 {
 	struct task_s task;
-	struct task_s *resized_queue;
 	task.run_tasks = fun;
 	task.arg = (void *)arg;
 	pthread_mutex_lock(&pool->mutex);
