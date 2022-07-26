@@ -32,8 +32,7 @@ static void
 loop:
 	pthread_mutex_lock(&pool->mutex);
 	while (!pool->pending && pool->keepalive) {
-		pool->active_threads--;
-		if (!pool->active_threads)
+		if (!pool->--active_threads)
 			pthread_cond_signal(&pool->done);
 		pthread_cond_wait(&pool->notify, &pool->mutex);
 		pool->active_threads++;
