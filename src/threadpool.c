@@ -25,6 +25,17 @@ struct tpool {
 };
 
 static void
+resize_queue(tpool_t pool)
+{
+	struct task_s *resized = malloc(TASK_S_SIZE * pool->queue_size);
+	pool->queue_tail -= pool->queue_head; 
+	memcpy(resized, &pool->task_queue[pool->queue_head], TASK_S_SIZE * pool->queue_tail);
+	pool->queue_head = 0;
+	free(pool->task_queue);
+	pool->task_queue = resized;
+}
+
+static void
 *run_tasks(void *arg)
 {
 	tpool_t pool = arg;
@@ -64,17 +75,6 @@ tpool_create(unsigned int num_threads)
 	for (int i = 0; i < num_threads; i++)
 		pthread_create(&pool->threads[i], NULL, &run_tasks, pool);
 	return (pool);
-}
-
-static void
-resize_queue(tpool_t pool)
-{
-	struct task_s *resized_queue = malloc(TASK_S_SIZE * pool->queue_size);
-	pool->queue_tail -= pool->queue_head; 
-	memcpy(resized_queue, &pool->task_queue[pool->queue_head], TASK_S_SIZE * pool->queue_tail);
-	pool->queue_head = 0;
-	free(pool->task_queue);
-	pool->task_queue = resized_queue;
 }
 
 void
