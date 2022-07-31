@@ -29,6 +29,7 @@ static void
 {
 	if (ptr == NULL)
 		err(1, "returned null");
+
 	return (ptr);
 }
 
