@@ -52,7 +52,7 @@ static void
 loop:
 	pthread_mutex_lock(&pool->lock);
 
-	while (!pool->pending && !pool->shutdown) {
+	while (!pool->pending) {
 		if (!--pool->active)
 			pthread_cond_signal(&pool->done);
 		pthread_cond_wait(&pool->notify, &pool->lock);
@@ -118,7 +118,7 @@ tpool_join(tpool_t pool)
 {
 	pthread_mutex_lock(&pool->lock);
 
-	while (pool->active || pool->pending)
+	while (pool->pending)
 		pthread_cond_wait(&pool->done, &pool->lock);
 
 	pool->shutdown = true;
