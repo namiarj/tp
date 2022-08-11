@@ -11,7 +11,7 @@
 #define TASK_S_SIZE sizeof(struct task_s)
 
 struct task_s {
-    void (*run_tasks)(tpool_t, void *);
+    void (*tpool_run)(tpool_t, void *);
     void *arg;
 };
 
@@ -45,10 +45,11 @@ resize(tpool_t pool)
 }
 
 static void
-*run_tasks(void *arg)
+*tpool_run(void *arg)
 {
 	tpool_t pool = arg;
 	struct task_s task;
+
 loop:
 	pthread_mutex_lock(&pool->lock);
 
@@ -59,14 +60,14 @@ loop:
 		pool->active++;
 	}
 
-	if (pool->shutdown)
-		goto shutdown;
+	if (pool->shutdown) goto shutdown;
 
-	task = pool->queue[pool->head++];
 	pool->pending--;
+	task = pool->queue[pool->head++];
 	pthread_mutex_unlock(&pool->lock);
-	task.run_tasks(pool,(void *)task.arg);
+	task.tpool_run(pool, (void *)task.arg);
 	goto loop;
+
 shutdown:
 	pthread_mutex_unlock(&pool->lock);
 	pthread_exit(NULL);
@@ -92,7 +93,7 @@ tpool_create(unsigned int num)
 }
 
 void
-tpool_schedule_task(tpool_t pool, void (*fun)(tpool_t, void*), void *arg)
+tpool_task(tpool_t pool, void (*fun)(tpool_t, void*), void *arg)
 {
 	struct task_s task;
 	task.run_tasks = fun;
