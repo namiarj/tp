@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "threadpool.h"
+#include "tp.h"
 
 #define QUEUE_SIZE 128 
 #define TASK_S_SIZE sizeof(struct task_s)
