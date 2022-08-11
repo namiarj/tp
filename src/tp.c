@@ -87,7 +87,7 @@ tpool_create(unsigned int num)
 	pthread_mutex_init(&pool->lock, NULL);
 
 	for (; num > 0; num--)
-		pthread_create(&pool->thread[num], NULL, &run_tasks, pool);
+		pthread_create(&pool->thread[num], NULL, &tpool_run, pool);
 
 	return (pool);
 }
