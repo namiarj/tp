@@ -118,10 +118,7 @@ void
 tpool_join(tpool_t pool)
 {
 	pthread_mutex_lock(&pool->lock);
-
-	while (pool->pending)
-		pthread_cond_wait(&pool->done, &pool->lock);
-
+	pthread_cond_wait(&pool->done, &pool->lock);
 	pool->shutdown = true;
 	pthread_cond_broadcast(&pool->notify);
 	pthread_mutex_unlock(&pool->lock);
