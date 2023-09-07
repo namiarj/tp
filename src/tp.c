@@ -11,7 +11,7 @@
 #define TASK_S_SIZE sizeof(struct task_s)
 
 struct task_s {
-    void (*tpool_run)(tpool_t, void *);
+    void (*tpool_run)(tpool, void *);
     void *arg;
 };
 
@@ -34,7 +34,7 @@ static void
 }
 
 static void
-resize(tpool_t pool)
+resize(tpool pool)
 {
 	struct task_s *resized = guard(malloc(TASK_S_SIZE * pool->size));
 	pool->tail -= pool->head; 
@@ -47,7 +47,7 @@ resize(tpool_t pool)
 static void
 *tpool_run(void *arg)
 {
-	tpool_t pool = arg;
+	tpool pool = arg;
 	struct task_s task;
 
 loop:
@@ -74,10 +74,10 @@ shutdown:
 	return (NULL);
 }
 
-tpool_t
+tpool
 tpool_create(unsigned int num)
 {
-	tpool_t pool = guard(malloc(sizeof(struct tpool)));
+	tpool pool = guard(malloc(sizeof(struct tpool)));
 	pool->queue = guard(malloc(TASK_S_SIZE * QUEUE_SIZE));
 	pool->thread = guard(malloc(sizeof(pthread_t) * num));
 	pool->size = QUEUE_SIZE;
@@ -93,7 +93,7 @@ tpool_create(unsigned int num)
 }
 
 void
-tpool_task(tpool_t pool, void (*fun)(tpool_t, void*), void *arg)
+tpoolask(tpool pool, void (*fun)(tpool, void*), void *arg)
 {
 	struct task_s task;
 	task.run_tasks = fun;
@@ -115,7 +115,7 @@ tpool_task(tpool_t pool, void (*fun)(tpool_t, void*), void *arg)
 }
 
 void
-tpool_join(tpool_t pool)
+tpool_join(tpool pool)
 {
 	pthread_mutex_lock(&pool->lock);
 	pthread_cond_wait(&pool->done, &pool->lock);
