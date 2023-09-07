@@ -93,7 +93,7 @@ tpool_create(unsigned int num)
 }
 
 void
-tpoolask(tpool pool, void (*fun)(tpool, void*), void *arg)
+tpool_task(tpool pool, void (*fun)(tpool, void*), void *arg)
 {
 	struct task_s task;
 	task.run_tasks = fun;
