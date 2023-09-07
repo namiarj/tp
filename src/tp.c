@@ -7,16 +7,15 @@
 
 #include "tp.h"
 
-#define QUEUE_SIZE 128 
-#define TASK_S_SIZE sizeof(struct task_s)
+#define QUEUE_SIZE 64 
 
-struct task_s {
+struct task {
     void (*tpool_run)(tpool, void *);
     void *arg;
 };
 
 struct tpool {
-	struct task_s	*queue;
+	struct task	*queue;
 	unsigned int	size, active, total, head, tail, pending;
 	bool		shutdown;
 	pthread_t	*thread;
@@ -36,9 +35,9 @@ static void
 static void
 resize(tpool pool)
 {
-	struct task_s *resized = guard(malloc(TASK_S_SIZE * pool->size));
+	struct task *resized = guard(malloc(sizeof(struct task) * pool->size));
 	pool->tail -= pool->head; 
-	guard(memcpy(resized, &pool->queue[pool->head], TASK_S_SIZE * pool->tail));
+	guard(memcpy(resized, &pool->queue[pool->head], sizeof(struct task) * pool->tail));
 	pool->head = 0;
 	free(pool->queue);
 	pool->queue = resized;
@@ -48,7 +47,7 @@ static void
 *tpool_run(void *arg)
 {
 	tpool pool = arg;
-	struct task_s task;
+	struct task task;
 
 loop:
 	pthread_mutex_lock(&pool->lock);
@@ -78,7 +77,7 @@ tpool
 tpool_create(unsigned int num)
 {
 	tpool pool = guard(malloc(sizeof(struct tpool)));
-	pool->queue = guard(malloc(TASK_S_SIZE * QUEUE_SIZE));
+	pool->queue = guard(malloc(sizeof(struct task) * QUEUE_SIZE));
 	pool->thread = guard(malloc(sizeof(pthread_t) * num));
 	pool->size = QUEUE_SIZE;
 	pool->active = pool->total = num;
@@ -95,8 +94,8 @@ tpool_create(unsigned int num)
 void
 tpool_task(tpool pool, void (*fun)(tpool, void*), void *arg)
 {
-	struct task_s task;
-	task.run_tasks = fun;
+	struct task task;
+	task.tpool_run = fun;
 	task.arg = (void *)arg;
 	pthread_mutex_lock(&pool->lock);
 	pool->queue[pool->tail++] = task;
